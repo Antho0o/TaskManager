@@ -1,0 +1,301 @@
+﻿@model IEnumerable<TaskManager.Models.TaskItem>
+
+@{
+    ViewData["Title"] = "Task Manager";
+    var totalTasks = (int)(ViewData["TotalTasks"] ?? 0);
+    var completedTasks = (int)(ViewData["CompletedTasks"] ?? 0);
+    var pendingTasks = (int)(ViewData["PendingTasks"] ?? 0);
+    var highPriorityTasks = (int)(ViewData["HighPriorityTasks"] ?? 0);
+
+    var completionPercentage = totalTasks > 0
+        ? (int)((double)completedTasks / totalTasks * 100)
+        : 0;
+}
+
+<div class="task-dashboard">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+
+        <div>
+            <div class="dashboard-label">TASK MANAGEMENT</div>
+
+            <h1>My Tasks</h1>
+
+            <p>
+                Organize your work, track progress, and stay productive.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="new-task-button">
+            <span>+</span>
+            New Task
+        </a>
+
+    </div>
+
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-label">TOTAL TASKS</div>
+            <div class="stat-number">@totalTasks</div>
+            <div class="stat-description">All tasks</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">COMPLETED</div>
+            <div class="stat-number">@completedTasks</div>
+            <div class="stat-description">Finished tasks</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">PENDING</div>
+            <div class="stat-number">@pendingTasks</div>
+            <div class="stat-description">Tasks remaining</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">HIGH PRIORITY</div>
+            <div class="stat-number">@highPriorityTasks</div>
+            <div class="stat-description">Need attention</div>
+        </div>
+
+    </div>
+
+
+    <!-- Progress -->
+    <div class="progress-section">
+
+        <div class="progress-header">
+
+            <div>
+                <h2>Overall Progress</h2>
+                <p>Keep going — you're making progress.</p>
+            </div>
+
+            <strong>@completionPercentage%</strong>
+
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar"
+                 style="width: @completionPercentage%">
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Tasks -->
+    <div class="section-header">
+
+        <div>
+            <div class="dashboard-label">YOUR WORK</div>
+            <h2>Tasks</h2>
+        </div>
+
+        <span class="task-count">
+            Showing @Model.Count() of @totalTasks
+        </span>
+
+    </div>
+
+
+    <!-- Search & Filters -->
+
+    <form asp-action="Index"
+          method="get"
+          class="task-filters">
+
+        <div class="search-box">
+
+            <span class="search-icon">⌕</span>
+
+            <input type="text"
+                   name="search"
+                   value="@ViewData["Search"]"
+                   placeholder="Search tasks..."
+                   autocomplete="off" />
+
+        </div>
+
+
+        <select name="status"
+                class="filter-select">
+
+            <option value="all"
+                    selected="@(ViewData["Status"]?.ToString() == "all")">
+                All Tasks
+            </option>
+
+            <option value="pending"
+                    selected="@(ViewData["Status"]?.ToString() == "pending")">
+                Pending
+            </option>
+
+            <option value="completed"
+                    selected="@(ViewData["Status"]?.ToString() == "completed")">
+                Completed
+            </option>
+
+        </select>
+
+
+        <select name="priority"
+                class="filter-select">
+
+            <option value="all"
+                    selected="@(ViewData["Priority"]?.ToString() == "all")">
+                All Priorities
+            </option>
+
+            <option value="High"
+                    selected="@(ViewData["Priority"]?.ToString() == "High")">
+                High
+            </option>
+
+            <option value="Medium"
+                    selected="@(ViewData["Priority"]?.ToString() == "Medium")">
+                Medium
+            </option>
+
+            <option value="Low"
+                    selected="@(ViewData["Priority"]?.ToString() == "Low")">
+                Low
+            </option>
+
+        </select>
+
+
+        <button type="submit"
+                class="filter-button">
+            Filter
+        </button>
+
+
+        <a asp-action="Index"
+           class="clear-filter-button">
+            Clear
+        </a>
+
+    </form>
+
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+
+                <div class="empty-icon">✓</div>
+
+                <h3>No tasks yet</h3>
+
+                <p>
+                    Create your first task and start getting things done.
+                </p>
+
+                <a asp-action="Create" class="new-task-button">
+                    Create Your First Task
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div class="task-list">
+
+                @foreach (var task in Model)
+                {
+                    <div class="task-card @(task.IsCompleted ? "completed" : "")">
+
+                        <div class="task-main">
+
+                            <div class="task-status">
+
+                                <form asp-action="Complete"
+                                      asp-route-id="@task.Id"
+                                      method="post">
+
+                                    <button type="submit"
+                                            class="status-button @(task.IsCompleted ? "checked" : "")"
+                                            title="@(task.IsCompleted ? "Mark as pending" : "Mark as complete")">
+
+                                        @if (task.IsCompleted)
+                                        {
+                                            <span>✓</span>
+                                        }
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+
+                            <div class="task-information">
+
+                                <div class="task-title-row">
+
+                                    <h3>
+                                        @task.Title
+                                    </h3>
+
+                                    <span class="priority priority-@task.Priority.ToLower()">
+                                        @task.Priority
+                                    </span>
+
+                                </div>
+
+
+                                @if (!string.IsNullOrWhiteSpace(task.Description))
+                                {
+                                    <p>
+                                        @task.Description
+                                    </p>
+                                }
+
+
+                                <div class="task-meta">
+
+                                    @if (task.DueDate.HasValue)
+                                    {
+                                        <span>
+                                            📅
+                                            Due @task.DueDate.Value.ToString("dd MMM yyyy")
+                                        </span>
+                                    }
+
+                                    <span>
+                                        Created @task.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="task-actions">
+
+                            <a asp-action="Edit"
+                               asp-route-id="@task.Id"
+                               class="action-button">
+                                Edit
+                            </a>
+
+                            <a asp-action="Delete"
+                               asp-route-id="@task.Id"
+                               class="action-button delete-action">
+                                Delete
+                            </a>
+
+                        </div>
+
+                    </div>
+                }
+
+        </div>
+    }
+</div>
